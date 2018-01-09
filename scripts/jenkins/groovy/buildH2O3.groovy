@@ -1,7 +1,8 @@
 def call(final pipelineContext) {
 
-  def PYTHON_VERSION = '3.5'
-  def R_VERSION = '3.4.1'
+  final String PYTHON_VERSION = '3.5'
+  final String R_VERSION = '3.4.1'
+  final String JAVA_VERSION = '8'
 
   // Load required scripts
   def insideDocker = load('h2o-3/scripts/jenkins/groovy/insideDocker.groovy')
@@ -14,7 +15,7 @@ def call(final pipelineContext) {
     pipelineContext.getBuildSummary().setStageDetails(this, stageName, env.NODE_NAME, env.WORKSPACE)
     try {
       // Launch docker container, build h2o-3, create test packages and archive artifacts
-      def buildEnv = pipelineContext.getBuildConfig().getBuildEnv() + "PYTHON_VERSION=${PYTHON_VERSION}" + "R_VERSION=${R_VERSION}"
+      def buildEnv = pipelineContext.getBuildConfig().getBuildEnv() + "PYTHON_VERSION=${PYTHON_VERSION}" + "R_VERSION=${R_VERSION}" + "JAVA_VERSION=${JAVA_VERSION}"
       insideDocker(buildEnv, pipelineContext.getBuildConfig().DEFAULT_IMAGE, pipelineContext.getBuildConfig().DOCKER_REGISTRY, 30, 'MINUTES') {
         stage(stageName) {
           try {

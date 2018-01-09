@@ -49,14 +49,21 @@ def call(body) {
 
 private void execMake(final String makefilePath, final String target, final String h2o3dir) {
   sh """
-    export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+    export JAVA_HOME=/usr/lib/jvm/java-current-oracle
     locale
 
     echo "Activating Python ${env.PYTHON_VERSION}"
     . /envs/h2o_env_python${env.PYTHON_VERSION}/bin/activate
+    python --version
 
     echo "Activating R ${env.R_VERSION}"
     activate_R_${env.R_VERSION}
+    R --version
+
+    echo "Activating Java ${env.JAVA_VERSION}"
+    . /usr/opt/activate_java_${env.JAVA_VERSION}
+    java -version 
+    javac -version 
 
     cd ${h2o3dir}
     echo "Linking small and bigdata"

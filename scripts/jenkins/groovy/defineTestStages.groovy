@@ -28,7 +28,11 @@ def call(final pipelineContext) {
       timeoutValue: 20, component: pipelineContext.getBuildConfig().COMPONENT_JS
     ],
     [
-      stageName: 'Java8 Smoke', target: 'test-junit-smoke',
+      stageName: 'Java8 Smoke', target: 'test-junit-smoke', javaVersion: 8,
+      timeoutValue: 20, component: pipelineContext.getBuildConfig().COMPONENT_JAVA
+    ],
+    [
+      stageName: 'Java9 Smoke', target: 'test-junit-smoke', javaVersion: 9,
       timeoutValue: 20, component: pipelineContext.getBuildConfig().COMPONENT_JAVA
     ]
   ]
@@ -112,7 +116,11 @@ def call(final pipelineContext) {
       timeoutValue: 10, component: pipelineContext.getBuildConfig().COMPONENT_PY
     ],
     [
-      stageName: 'Java 8 JUnit', target: 'test-junit-jenkins', pythonVersion: '2.7',
+      stageName: 'Java 8 JUnit', target: 'test-junit-jenkins', pythonVersion: '2.7', javaVersion: 8,
+      timeoutValue: 90, component: pipelineContext.getBuildConfig().COMPONENT_JAVA, additionalTestPackages: [pipelineContext.getBuildConfig().COMPONENT_PY]
+    ],
+    [
+      stageName: 'Java 9 JUnit', target: 'test-junit-jenkins', pythonVersion: '2.7', javaVersion: 9,
       timeoutValue: 90, component: pipelineContext.getBuildConfig().COMPONENT_JAVA, additionalTestPackages: [pipelineContext.getBuildConfig().COMPONENT_PY]
     ]
   ]
@@ -200,6 +208,7 @@ private void executeInParallel(final jobs, final pipelineContext) {
           target = c['target']
           pythonVersion = c['pythonVersion']
           rVersion = c['rVersion']
+          javaVersion = c['javaVersion']
           timeoutValue = c['timeoutValue']
           hasJUnit = c['hasJUnit']
           component = c['component']
@@ -221,6 +230,7 @@ private void invokeStage(final pipelineContext, final body) {
 
   def DEFAULT_PYTHON = '3.5'
   def DEFAULT_R = '3.4.1'
+  def DEFAULT_JAVA = '8'
   def DEFAULT_TIMEOUT = 60
   def DEFAULT_EXECUTION_SCRIPT = 'h2o-3/scripts/jenkins/groovy/defaultStage.groovy'
 
@@ -234,6 +244,7 @@ private void invokeStage(final pipelineContext, final body) {
 
   config.pythonVersion = config.pythonVersion ?: DEFAULT_PYTHON
   config.rVersion = config.rVersion ?: DEFAULT_R
+  config.javaVersion = config.javaVersion ?: DEFAULT_JAVA
   config.timeoutValue = config.timeoutValue ?: DEFAULT_TIMEOUT
   config.hasJUnit = config.hasJUnit ?: true
   config.additionalTestPackages = config.additionalTestPackages ?: []
