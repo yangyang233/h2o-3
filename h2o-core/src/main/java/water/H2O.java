@@ -1835,8 +1835,8 @@ final public class H2O {
    */
   public static boolean checkUnsupportedJava() {
     String version = System.getProperty("java.version");
-    if (version != null && !(version.startsWith("1.6") || version.startsWith("1.7") || version.startsWith("1.8"))) {
-      System.err.println("Only Java 1.6-1.8 supported, version is " + version);
+    if (version != null && !(version.startsWith("1.6") || version.startsWith("1.7") || version.startsWith("1.8") || version.startsWith("9"))) {
+      System.err.println("Only Java 1.6-1.8 and 9 supported, version is " + version);
       return true;
     }
     String vmName = System.getProperty("java.vm.name");
