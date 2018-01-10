@@ -161,8 +161,8 @@ test-package-java:
 		h2o-core/src/test/resources/*.jks \
 		h2o-core/build/resources/main \
 		h2o-core/build/resources/test \
-		h2o-core/build/classes/test \
-		h2o-core/build/classes/main \
+		h2o-core/build/classes/java/test \
+		h2o-core/build/classes/java/main \
 		h2o-core/build/libs/h2o-core.jar \
 		h2o-genmodel/src/ \
 		h2o-genmodel/build/libs/h2o-genmodel.jar \
