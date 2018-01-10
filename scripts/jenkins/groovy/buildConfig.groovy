@@ -180,7 +180,8 @@ class BuildConfig {
   }
 
   static enum NodeLabels {
-    LABELS_C1('docker && !mr-0xc8', 'mr-0xc9'),
+    // FIXME temporarily exclude mr-0xc11
+    LABELS_C1('docker && !mr-0xc8 && !mr-0xc11', 'mr-0xc9'),
     LABELS_B4('docker', 'docker')
 
     private String defaultNodeLabel
