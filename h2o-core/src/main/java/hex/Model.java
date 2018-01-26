@@ -1067,7 +1067,8 @@ public abstract class Model<M extends Model<M,P,O>, P extends Model.Parameters, 
         }
       }
       if( vec != null ) {          // I have a column with a matching name
-        if( domains[i] != null ) { // Model expects an categorical
+        if( domains[i] != null ) {
+          // Model expects an categorical with domains
           if (vec.isString())
             vec = VecUtils.stringToCategorical(vec); //turn a String column into a categorical column (we don't delete the original vec here)
           if( expensive && vec.domain() != domains[i] && !Arrays.equals(vec.domain(),domains[i]) ) { // Result needs to be the same categorical
@@ -1087,6 +1088,7 @@ public abstract class Model<M extends Model<M,P,O>, P extends Model.Parameters, 
             vec = evec;
           }
         } else if(vec.isCategorical()) {
+          // Model expects an categorical with no domains (a numeric categorical)
           if (parms._categorical_encoding == Parameters.CategoricalEncodingScheme.LabelEncoder) {
             Vec evec = vec.toNumericVec();
             toDelete.put(evec._key, "label encoded vec");
