@@ -11,7 +11,6 @@ import water.fvec.Frame;
 import water.fvec.Vec;
 import water.nbhm.NonBlockingHashSet;
 import water.udf.CFuncRef;
-import water.util.IcedHashMap;
 import water.util.Log;
 import water.util.ReflectionUtils;
 
@@ -366,7 +365,8 @@ public class StackedEnsembleModel extends Model<StackedEnsembleModel,StackedEnse
 
         // See PUBDEV-5253: use _origDomains, not _domains, because CategoricalEncoding.LabelEncoding can remove
         // the domains from the base models.
-        _output._domains = Arrays.copyOf(aModel._output._origDomains, aModel._output._origDomains.length);
+        if (aModel._output._origDomains != null)
+          _output._domains = Arrays.copyOf(aModel._output._origDomains, aModel._output._origDomains.length);
         _output._origDomains = _output._domains;
 
         _output._names = aModel._output._origNames;
