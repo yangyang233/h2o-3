@@ -9,7 +9,6 @@ import water.*;
 import water.exceptions.H2OIllegalArgumentException;
 import water.fvec.Frame;
 import water.fvec.Vec;
-import water.nbhm.NonBlockingHashSet;
 import water.udf.CFuncRef;
 import water.util.Log;
 import water.util.ReflectionUtils;
@@ -30,7 +29,6 @@ public class StackedEnsembleModel extends Model<StackedEnsembleModel,StackedEnse
   public long trainingFrameRows = -1;
 
   public String responseColumn = null;
-  private NonBlockingHashSet<String> names = null;  // keep columns as a set for easier comparison
   //public int nfolds = -1; //From 1st base model
 
   // Get from 1st base model (should be identical across base models)
@@ -369,13 +367,8 @@ public class StackedEnsembleModel extends Model<StackedEnsembleModel,StackedEnse
           _output._domains = Arrays.copyOf(aModel._output._origDomains, aModel._output._origDomains.length);
         _output._origDomains = _output._domains;
 
-        _output._names = aModel._output._origNames;
-        _output._origNames = _output._names;
-
-        if (aModel._output._origNames != null) {
-          this.names = new NonBlockingHashSet<>();
-          this.names.addAll(Arrays.asList(aModel._output._origNames));
-        }
+        _output._names = aModel._output._names;
+        _output._origNames = aModel._output._origNames;  // only set if ModelBuilder.encodeFrameCategoricals() changes the training frame
 
         // TODO: set _parms._train to aModel._parms.train() ?
 
