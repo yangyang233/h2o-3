@@ -47,9 +47,9 @@ def predict_json_test(target_dir):
 
     # Getting first row from test data frame
     pdf = test[1, 2:]
-    x = pdf.as_data_frame()
-    df_json = x.to_json(orient='records')
-    print(df_json)
+    input_csv = "%s/in.csv" % target_dir
+    output_csv = "%s/output.csv" % target_dir
+    h2o.export_file(pdf, input_csv)
 
     # =================================================================
     # Regression
@@ -63,10 +63,9 @@ def predict_json_test(target_dir):
     download_mojo(regression_gbm1, mojo_zip_path)
 
     print("\nPerforming Regression Prediction using MOJO @... " + target_dir)
-    prediction_result = h2o_utils.predict_json(mojo_zip_path, df_json)
-    p2 = json.loads(prediction_result)[0]["value"]
-    print("Prediction result: " + str(p2))
-    assert p1 == p2, "expected predictions to be the same for binary and MOJO model for regression"
+    prediction_result = h2o_utils.predict_json(input_csv=input_csv, mojo_zip=mojo_zip_path, output_csv=output_csv)
+    print("Prediction result: " + str(prediction_result))
+    assert p1 == float(prediction_result[0]['predict']), "expected predictions to be the same for binary and MOJO model for regression"
 
     # =================================================================
     # Binomial
@@ -77,24 +76,23 @@ def predict_json_test(target_dir):
     bernoulli_gbm1.train(x=[2, 3, 4, 5, 6, 7, 8], y=1, training_frame=train)
     pred_bin = bernoulli_gbm1.predict(pdf)
 
-    bin_p0 = pred_bin[0, 1]
-    bin_p1 = pred_bin[0, 2]
-    print("Binomial prediction: p0: " + str(bin_p0))
-    print("Binomial prediction: p1: " + str(bin_p1))
+    binary_prediction_0 = pred_bin[0, 1]
+    binary_prediction_1 = pred_bin[0, 2]
+    print("Binomial prediction: p0: " + str(binary_prediction_0))
+    print("Binomial prediction: p1: " + str(binary_prediction_1))
 
     download_mojo(bernoulli_gbm1, mojo_zip_path)
 
     print("\nPerforming Binomial Prediction using MOJO @... " + target_dir)
-    prediction_result = h2o_utils.predict_json(mojo_zip_path, df_json)
-    bin_values = json.loads(prediction_result)[0]["classProbabilities"]
+    prediction_result = h2o_utils.predict_json(input_csv=input_csv, mojo_zip=mojo_zip_path, output_csv=output_csv)
 
-    bin_p20 = bin_values[0]
-    bin_p21 = bin_values[1]
-    print("Binomial prediction: p0: " + str(bin_p20))
-    print("Binomial prediction: p1: " + str(bin_p21))
+    mojo_prediction_0 = float(prediction_result[0]['0'])
+    mojo_prediction_1 = float(prediction_result[0]['1'])
+    print("Binomial prediction: p0: " + str(mojo_prediction_0))
+    print("Binomial prediction: p1: " + str(mojo_prediction_1))
 
-    assert bin_p0 == bin_p20, "expected predictions to be the same for binary and MOJO model for Binomial - p0"
-    assert bin_p1 == bin_p21, "expected predictions to be the same for binary and MOJO model for Binomial - p1"
+    assert binary_prediction_0 == mojo_prediction_0, "expected predictions to be the same for binary and MOJO model for Binomial - p0"
+    assert binary_prediction_1 == mojo_prediction_1, "expected predictions to be the same for binary and MOJO model for Binomial - p1"
 
     # =================================================================
     # Multinomial
@@ -107,81 +105,102 @@ def predict_json_test(target_dir):
 
     # Getting first row from test data frame
     pdf = test[1, 0:4]
-    x = pdf.as_data_frame()
-    df_json = x.to_json(orient='records')
+    input_csv = "%s/in-multi.csv" % target_dir
+    output_csv = "%s/output.csv" % target_dir
+    h2o.export_file(pdf, input_csv)
 
     multi_gbm = H2OGradientBoostingEstimator()
     multi_gbm.train(x=['C1', 'C2', 'C3', 'C4'], y='C5', training_frame=train)
 
     pred_multi = multi_gbm.predict(pdf)
-    binary_res1 = pred_multi[0, 1]
-    binary_res2 = pred_multi[0, 2]
-    binary_res3 = pred_multi[0, 3]
-    print("Multinomial prediction (Binary): p0: " + str(binary_res1))
-    print("Multinomial prediction (Binary): p1: " + str(binary_res2))
-    print("Multinomial prediction (Binary): p2: " + str(binary_res3))
+    multinomial_prediction_1 = pred_multi[0, 1]
+    multinomial_prediction_2 = pred_multi[0, 2]
+    multinomial_prediction_3 = pred_multi[0, 3]
+    print("Multinomial prediction (Binary): p0: " + str(multinomial_prediction_1))
+    print("Multinomial prediction (Binary): p1: " + str(multinomial_prediction_2))
+    print("Multinomial prediction (Binary): p2: " + str(multinomial_prediction_3))
 
     download_mojo(multi_gbm, mojo_zip_path)
 
     print("\nPerforming Binomial Prediction using MOJO @... " + target_dir)
-    prediction_result = h2o_utils.predict_json(mojo_zip_path, df_json)
+    prediction_result = h2o_utils.predict_json(input_csv=input_csv, mojo_zip=mojo_zip_path, output_csv=output_csv)
 
-    multi_values = json.loads(prediction_result)[0]["classProbabilities"]
-    mojo_res1 = multi_values[0]
-    mojo_res2 = multi_values[1]
-    mojo_res3 = multi_values[2]
-    print("Multinomial prediction (MOJO): p0: " + str(mojo_res1))
-    print("Multinomial prediction (MOJO): p1: " + str(mojo_res2))
-    print("Multinomial prediction (MOJO): p2: " + str(mojo_res3))
+    mojo_prediction_1 = float(prediction_result[0]['Iris-setosa'])
+    mojo_prediction_2 = float(prediction_result[0]['Iris-versicolor'])
+    mojo_prediction_3 = float(prediction_result[0]['Iris-virginica'])
+    print("Multinomial prediction (MOJO): p0: " + str(mojo_prediction_1))
+    print("Multinomial prediction (MOJO): p1: " + str(mojo_prediction_2))
+    print("Multinomial prediction (MOJO): p2: " + str(mojo_prediction_3))
 
-    assert binary_res1 == mojo_res1, "expected predictions to be the same for binary and MOJO model for Multinomial - p0"
-    assert binary_res2 == mojo_res2, "expected predictions to be the same for binary and MOJO model for Multinomial - p1"
-    assert binary_res3 == mojo_res3, "expected predictions to be the same for binary and MOJO model for Multinomial - p2"
+    assert multinomial_prediction_1 == mojo_prediction_1, "expected predictions to be the same for binary and MOJO model for Multinomial - p0"
+    assert multinomial_prediction_2 == mojo_prediction_2, "expected predictions to be the same for binary and MOJO model for Multinomial - p1"
+    assert multinomial_prediction_3 == mojo_prediction_3, "expected predictions to be the same for binary and MOJO model for Multinomial - p2"
 
 
 def test_predict_json_api(sandbox_dir):
     data = h2o.import_file(path=pyunit_utils.locate("smalldata/logreg/prostate.csv"))
+
+    input_csv = "%s/in.csv" % sandbox_dir
+    output_csv = "%s/prediction.csv" % sandbox_dir
+    h2o.export_file(data[1, 2:], input_csv)
+
     data[1] = data[1].asfactor()
     model = H2OGradientBoostingEstimator(distribution="bernoulli")
     model.train(x=[2, 3, 4, 5, 6, 7, 8], y=1, training_frame=data)
 
-    json = data[1, 2:].as_data_frame().to_json(orient='records')
-
+    # download mojo
     model_zip_path = os.path.join(sandbox_dir, 'model.zip')
     genmodel_path = os.path.join(sandbox_dir, 'h2o-genmodel.jar')
     download_mojo(model, model_zip_path)
     assert os.path.isfile(model_zip_path)
     assert os.path.isfile(genmodel_path)
-    h2o_utils.predict_json(mojo_zip_path=model_zip_path, json=json, verbose=True)
-    h2o_utils.predict_json(mojo_zip_path=model_zip_path, json=json, genmodel_path=genmodel_path, verbose=True)
-    os.remove(model_zip_path)
-    os.remove(genmodel_path)
-    print(sandbox_dir)
 
-    genmodel_path = os.path.join(sandbox_dir, 'h2o-genmodel-custom.jar')
-    download_mojo(model, model_zip_path, genmodel_path)
-    assert os.path.isfile(model_zip_path)
-    assert os.path.isfile(genmodel_path)
-    try:
-        h2o_utils.predict_json(mojo_zip_path=model_zip_path, json=json, verbose=True)
-        assert False, "There should be no h2o-genmodel.jar at %s" % sandbox_dir
-    except RuntimeError:
-        pass
-    h2o_utils.predict_json(mojo_zip_path=model_zip_path, json=json, genmodel_path=genmodel_path, verbose=True)
+    # test that we can predict using default paths
+    h2o_utils.predict_json(input_csv=input_csv, mojo_zip=model_zip_path, verbose=True)
+    h2o_utils.predict_json(input_csv=input_csv, mojo_zip=model_zip_path, genmodel_jar=genmodel_path, verbose=True)
+    assert os.path.isfile(output_csv)
     os.remove(model_zip_path)
     os.remove(genmodel_path)
+    os.remove(output_csv)
+
+    # test that we can predict using custom genmodel path
+    other_sandbox_dir = tempfile.mkdtemp()
+    try:
+        genmodel_path = os.path.join(other_sandbox_dir, 'h2o-genmodel-custom.jar')
+        download_mojo(model, model_zip_path, genmodel_path)
+        assert os.path.isfile(model_zip_path)
+        assert os.path.isfile(genmodel_path)
+        try:
+            h2o_utils.predict_json(input_csv=input_csv, mojo_zip=model_zip_path, verbose=True)
+            assert False, "There should be no h2o-genmodel.jar at %s" % sandbox_dir
+        except RuntimeError:
+            pass
+        assert not os.path.isfile(output_csv)
+        h2o_utils.predict_json(input_csv=input_csv, mojo_zip=model_zip_path, genmodel_jar=genmodel_path, verbose=True)
+        assert os.path.isfile(output_csv)
+        os.remove(output_csv)
+
+        output_csv = "%s/out.prediction" % other_sandbox_dir
+
+        # test that we can predict using default paths
+        h2o_utils.predict_json(input_csv=input_csv, mojo_zip=model_zip_path, genmodel_jar=genmodel_path, verbose=True, output_csv=output_csv)
+        assert os.path.isfile(output_csv)
+        os.remove(model_zip_path)
+        os.remove(genmodel_path)
+        os.remove(output_csv)
+    finally:
+        shutil.rmtree(other_sandbox_dir)
 
 
 target_dir = tempfile.mkdtemp()
 api_target_dir = tempfile.mkdtemp()
 try:
     if __name__ == "__main__":
-        # pyunit_utils.standalone_test(lambda: predict_json_test(target_dir))
+        pyunit_utils.standalone_test(lambda: predict_json_test(target_dir))
         pyunit_utils.standalone_test(lambda: test_predict_json_api(api_target_dir))
     else:
         predict_json_test(target_dir)
         test_predict_json_api(api_target_dir)
 finally:
     shutil.rmtree(target_dir)
-    # shutil.rmtree(api_target_dir)
-    print("Done!!")
+    shutil.rmtree(api_target_dir)

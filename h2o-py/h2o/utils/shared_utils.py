@@ -19,6 +19,7 @@ import io
 import string
 import subprocess
 import json
+import csv
 
 from h2o.exceptions import H2OValueError
 from h2o.utils.compatibility import *  # NOQA
@@ -367,14 +368,14 @@ handle_python_lists = _handle_python_lists
 check_lists_of_lists = _check_lists_of_lists
 
 gen_model_file_name = "h2o-genmodel.jar"
-h2o_predictor_class = "water.util.H2OPredictor"
+h2o_predictor_class = "hex.genmodel.tools.PredictCsv"
 
 
 def find_file(name, path):
     """
     Walks specified path and checks if file with given name exists.
-    :param name: name of the file to find
-    :param path: path to folder/directory to start the walk at
+    :param name: Name of the file to find
+    :param path: Path to folder/directory to start the walk at
     :return: Path to file with given name or None if no such file exists
     """
     for root, dirs, files in os.walk(path):
@@ -386,7 +387,7 @@ def ensure_json(json_str):
     """
     Returns True, if json_str can be parsed as JSON object, raises RuntimeError otherwise
     :param json_str: str to parse
-    :return: parsed JSON object, if json_str can be parsed as JSON object, raises RuntimeError otherwise
+    :return: Parsed JSON object, if json_str can be parsed as JSON object, raises RuntimeError otherwise
     """
     try:
         return json.loads(json_str)
@@ -394,63 +395,87 @@ def ensure_json(json_str):
         raise RuntimeError("Error: Given JSON string does not look like valid JSON string.")
 
 
-def predict_json(mojo_zip_path, json, genmodel_path=None, labels=False, classpath=None, javaoptions='-Xmx4g', verbose=False):
+def predict_json(input_csv, mojo_zip, output_csv=None, genmodel_jar=None, classpath=None, java_options=None, verbose=False):
     """
-    MOJO scoring function to take a pandas data frame as json string and use MOJO model as zip file to score
-    :param mojo_zip_path: path to MOJO zip downloaded from H2O
-    :param json: JSON representation of the dataframe being predicted
-    :param genmodel_path: (Optional) path to genmodel jar file. If None (default), then the h2o-genmodel.jar in the same
-    folder as the MOJO zip will be used
-    :param labels: (Optional) True by default, prints results, otherwise does not print them
-    :param classpath: (Optional) use the user defined class path, if None (default), the default class for this MOJO
-    will be used
-    :param javaoptions: (Optional) these are the Java string options given by the user
-    :param verbose: (Optional) False by default, if True, print additional debug information
-    :return: score as json values
+    MOJO scoring function to take a CSV file and use MOJO model as zip file to score.
+    :param input_csv: Path to input CSV file.
+    :param mojo_zip: Path to MOJO zip downloaded from H2O.
+    :param output_csv: Optional, name of the output CSV file with computed predictions. If None (default), then
+    predictions will be saved as prediction.csv in the same folder as the MOJO zip.
+    :param genmodel_jar: Optional, path to genmodel jar file. If None (default) then the h2o-genmodel.jar in the same
+    folder as the MOJO zip will be used.
+    :param classpath: Optional, specifies custom user defined classpath which will be used when scoring. If None
+    (default) then the default classpath for this MOJO model will be used.
+    :param java_options: Optional, custom user defined options for Java. By default '-Xmx4g' is used. 
+    :param verbose: Optional, if True, then additional debug information will be printed. False by default.
+    :return: List of computed predictions
     """
-    if verbose:
-        print(json)
-
-    # Verifying JSON
-    ensure_json(json)
-
-    mojo_zip_path = os.path.abspath(mojo_zip_path)
-    if verbose:
-        print("MOJO zip path is %s" % mojo_zip_path)
-    if not os.path.isfile(mojo_zip_path):
-        raise RuntimeError("MOJO zip cannot be found at %s" % mojo_zip_path)
-
-    parent_dir = os.path.dirname(mojo_zip_path)
-
-    if genmodel_path is None:
-        genmodel_path = os.path.join(parent_dir, gen_model_file_name)
-    if verbose:
-        print("Genmodel jar path is %s" % genmodel_path)
-    if not os.path.isfile(genmodel_path):
-        raise RuntimeError("Genmodel jar cannot be found at %s" % genmodel_path)
+    default_java_options = '-Xmx4g -XX:ReservedCodeCacheSize=256m'
+    prediction_output_file = 'prediction.csv'
 
     # Checking java
     java = H2OLocalServer._find_java()
     H2OLocalServer._check_java(java=java, verbose=verbose)
 
-    gen_model_arg = "." + os.pathsep + parent_dir + os.sep
-    gen_model_arg += (gen_model_file_name + os.pathsep
-                      + parent_dir
-                      + os.pathsep + "genmodel.jar")
-
-    if classpath:
-        gen_model_arg = classpath
-
+    # Ensure input_csv exists
     if verbose:
-        print("Java command is: %s %s -cp %s %s %s \'%s\'" % (java, javaoptions, gen_model_arg, h2o_predictor_class, mojo_zip_path, json))
+        print("input_csv:\t%s" % input_csv)
+    if not os.path.isfile(input_csv):
+        raise RuntimeError("Input csv cannot be found at %s" % input_csv)
 
-    result_output = subprocess.check_output([java, javaoptions, "-cp", gen_model_arg, h2o_predictor_class,
-                                             mojo_zip_path, json], shell=False).decode()
+    # Ensure mojo_zip exists
+    mojo_zip = os.path.abspath(mojo_zip)
+    if verbose:
+        print("mojo_zip:\t%s" % mojo_zip)
+    if not os.path.isfile(mojo_zip):
+        raise RuntimeError("MOJO zip cannot be found at %s" % mojo_zip)
 
-    if labels:
-        print(result_output)
+    parent_dir = os.path.dirname(mojo_zip)
 
-    return result_output
+    # Set output_csv if necessary
+    if output_csv is None:
+        output_csv = os.path.join(parent_dir, prediction_output_file)
+
+    # Set path to h2o-genmodel.jar if necessary and check it's valid
+    if genmodel_jar is None:
+        genmodel_jar = os.path.join(parent_dir, gen_model_file_name)
+    if verbose:
+        print("genmodel_jar:\t%s" % genmodel_jar)
+    if not os.path.isfile(genmodel_jar):
+        raise RuntimeError("Genmodel jar cannot be found at %s" % genmodel_jar)
+
+    if verbose and output_csv is not None:
+        print("output_csv:\t%s" % output_csv)
+
+    # Set classpath if necessary
+    if classpath is None:
+        classpath = genmodel_jar
+    if verbose:
+        print("classpath:\t%s" % classpath)
+
+    # Set java_options if necessary
+    if java_options is None:
+        java_options = default_java_options
+    if verbose:
+        print("java_options:\t%s" % java_options)
+
+    # Construct command to invoke java
+    cmd = [java]
+    for option in java_options.split(' '):
+        cmd += [option]
+    cmd += ["-cp", classpath, h2o_predictor_class, "--mojo", mojo_zip, "--input", input_csv,
+           '--output', output_csv, '--decimal']
+    if verbose:
+        cmd_str = " ".join(cmd)
+        print("java cmd:\t%s" % cmd_str)
+
+    # invoke the command
+    subprocess.check_call(cmd, shell=False)
+
+    # load predictions in form of a dict
+    with open(output_csv) as csv_file:
+        result = list(csv.DictReader(csv_file))
+    return result
 
 
 def deprecated(message):
