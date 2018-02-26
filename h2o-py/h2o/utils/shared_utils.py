@@ -371,30 +371,6 @@ gen_model_file_name = "h2o-genmodel.jar"
 h2o_predictor_class = "hex.genmodel.tools.PredictCsv"
 
 
-def find_file(name, path):
-    """
-    Walks specified path and checks if file with given name exists.
-    :param name: Name of the file to find
-    :param path: Path to folder/directory to start the walk at
-    :return: Path to file with given name or None if no such file exists
-    """
-    for root, dirs, files in os.walk(path):
-        if name in files:
-            return os.path.join(root, name)
-
-
-def ensure_json(json_str):
-    """
-    Returns True, if json_str can be parsed as JSON object, raises RuntimeError otherwise
-    :param json_str: str to parse
-    :return: Parsed JSON object, if json_str can be parsed as JSON object, raises RuntimeError otherwise
-    """
-    try:
-        return json.loads(json_str)
-    except ValueError:
-        raise RuntimeError("Error: Given JSON string does not look like valid JSON string.")
-
-
 def mojo_predict(input_csv, mojo_zip, output_csv=None, genmodel_jar=None, classpath=None, java_options=None, verbose=False):
     """
     MOJO scoring function to take a CSV file and use MOJO model as zip file to score.
