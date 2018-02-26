@@ -1,3 +1,3 @@
-from .shared_utils import predict_json
+from .shared_utils import mojo_predict
 
-__all__ = ("predict_json")
+__all__ = ("mojo_predict")

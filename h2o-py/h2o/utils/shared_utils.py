@@ -33,7 +33,7 @@ _id_ctr = 0
 # forbid all characters that are declared as "illegal" in Key.java.
 _id_allowed_characters = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
 
-__all__ = ("predict_json", )
+__all__ = ("mojo_predict",)
 
 
 def _py_tmp_key(append):
@@ -395,7 +395,7 @@ def ensure_json(json_str):
         raise RuntimeError("Error: Given JSON string does not look like valid JSON string.")
 
 
-def predict_json(input_csv, mojo_zip, output_csv=None, genmodel_jar=None, classpath=None, java_options=None, verbose=False):
+def mojo_predict(input_csv, mojo_zip, output_csv=None, genmodel_jar=None, classpath=None, java_options=None, verbose=False):
     """
     MOJO scoring function to take a CSV file and use MOJO model as zip file to score.
     :param input_csv: Path to input CSV file.

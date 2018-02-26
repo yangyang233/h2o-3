@@ -63,7 +63,7 @@ def predict_json_test(target_dir):
     download_mojo(regression_gbm1, mojo_zip_path)
 
     print("\nPerforming Regression Prediction using MOJO @... " + target_dir)
-    prediction_result = h2o_utils.predict_json(input_csv=input_csv, mojo_zip=mojo_zip_path, output_csv=output_csv)
+    prediction_result = h2o_utils.mojo_predict(input_csv=input_csv, mojo_zip=mojo_zip_path, output_csv=output_csv)
     print("Prediction result: " + str(prediction_result))
     assert p1 == float(prediction_result[0]['predict']), "expected predictions to be the same for binary and MOJO model for regression"
 
@@ -84,7 +84,7 @@ def predict_json_test(target_dir):
     download_mojo(bernoulli_gbm1, mojo_zip_path)
 
     print("\nPerforming Binomial Prediction using MOJO @... " + target_dir)
-    prediction_result = h2o_utils.predict_json(input_csv=input_csv, mojo_zip=mojo_zip_path, output_csv=output_csv)
+    prediction_result = h2o_utils.mojo_predict(input_csv=input_csv, mojo_zip=mojo_zip_path, output_csv=output_csv)
 
     mojo_prediction_0 = float(prediction_result[0]['0'])
     mojo_prediction_1 = float(prediction_result[0]['1'])
@@ -123,7 +123,7 @@ def predict_json_test(target_dir):
     download_mojo(multi_gbm, mojo_zip_path)
 
     print("\nPerforming Binomial Prediction using MOJO @... " + target_dir)
-    prediction_result = h2o_utils.predict_json(input_csv=input_csv, mojo_zip=mojo_zip_path, output_csv=output_csv)
+    prediction_result = h2o_utils.mojo_predict(input_csv=input_csv, mojo_zip=mojo_zip_path, output_csv=output_csv)
 
     mojo_prediction_1 = float(prediction_result[0]['Iris-setosa'])
     mojo_prediction_2 = float(prediction_result[0]['Iris-versicolor'])
@@ -156,8 +156,8 @@ def test_predict_json_api(sandbox_dir):
     assert os.path.isfile(genmodel_path)
 
     # test that we can predict using default paths
-    h2o_utils.predict_json(input_csv=input_csv, mojo_zip=model_zip_path, verbose=True)
-    h2o_utils.predict_json(input_csv=input_csv, mojo_zip=model_zip_path, genmodel_jar=genmodel_path, verbose=True)
+    h2o_utils.mojo_predict(input_csv=input_csv, mojo_zip=model_zip_path, verbose=True)
+    h2o_utils.mojo_predict(input_csv=input_csv, mojo_zip=model_zip_path, genmodel_jar=genmodel_path, verbose=True)
     assert os.path.isfile(output_csv)
     os.remove(model_zip_path)
     os.remove(genmodel_path)
@@ -171,19 +171,19 @@ def test_predict_json_api(sandbox_dir):
         assert os.path.isfile(model_zip_path)
         assert os.path.isfile(genmodel_path)
         try:
-            h2o_utils.predict_json(input_csv=input_csv, mojo_zip=model_zip_path, verbose=True)
+            h2o_utils.mojo_predict(input_csv=input_csv, mojo_zip=model_zip_path, verbose=True)
             assert False, "There should be no h2o-genmodel.jar at %s" % sandbox_dir
         except RuntimeError:
             pass
         assert not os.path.isfile(output_csv)
-        h2o_utils.predict_json(input_csv=input_csv, mojo_zip=model_zip_path, genmodel_jar=genmodel_path, verbose=True)
+        h2o_utils.mojo_predict(input_csv=input_csv, mojo_zip=model_zip_path, genmodel_jar=genmodel_path, verbose=True)
         assert os.path.isfile(output_csv)
         os.remove(output_csv)
 
         output_csv = "%s/out.prediction" % other_sandbox_dir
 
         # test that we can predict using default paths
-        h2o_utils.predict_json(input_csv=input_csv, mojo_zip=model_zip_path, genmodel_jar=genmodel_path, verbose=True, output_csv=output_csv)
+        h2o_utils.mojo_predict(input_csv=input_csv, mojo_zip=model_zip_path, genmodel_jar=genmodel_path, verbose=True, output_csv=output_csv)
         assert os.path.isfile(output_csv)
         os.remove(model_zip_path)
         os.remove(genmodel_path)
