@@ -90,14 +90,21 @@ def random_dataset(response_type, verbose=True):
     fractions["string_fraction"] = 0  # Right now we are dropping string columns, so no point in having them.
     fractions["binary_fraction"] /= 3
     fractions["time_fraction"] /= 2
-    seeds = int(time.time())
-    print("Seed used in frame generation is {0}".format(seeds))
+
 
     sum_fractions = sum(fractions.values())
     for k in fractions:
         fractions[k] /= sum_fractions
     response_factors = random.randint(3, 10)
-    df = h2o.create_frame(rows=random.randint(15000, 25000) + NTESTROWS, cols=random.randint(3, 20),
+    ncols = random.randint(3,20)
+    nrows = random.randint(15000, 25000) + NTESTROWS
+    seeds = int(time.time())
+    print("Seed used in frame generation is {0}".format(seeds))
+    print("cols is {0}, rows is {1}".format(ncols,nrows))
+    print("response factors is {0}".format(response_factors))
+    print("fractions used is {0}".format(fractions))
+
+    df = h2o.create_frame(rows=nrows, cols=ncols,
                           missing_fraction=0,
                           has_response=True, response_factors=response_factors, positive_response=True, factors=10,
                           seed=seeds,**fractions)
