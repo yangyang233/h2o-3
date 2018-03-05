@@ -1036,6 +1036,11 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
           else
             fitIRLSM(solver);
           break;
+        case GRADIENT_DESCENT_LH:
+        case GRADIENT_DESCENT_SQERR:
+          if (_parms._family.equals(Family.ordinal))
+            fitIRLSM_ordinal_default(solver);
+          break;
         case L_BFGS:
           fitLBFGS();
           break;
