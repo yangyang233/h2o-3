@@ -115,8 +115,6 @@ public class AstMerge extends AstPrimitive {
               " found types " + lv.get_type_str() + " and " + rv.get_type_str());
         if (lv.isString())
           throw new IllegalArgumentException("Cannot merge Strings; flip toCategoricalVec first");
-        if (lv.isString() && method.equals("auto"))
-          method = "hash";  // set method to hash if user choose auto but there is string column in right frame
     }
 
     // GC now to sync nodes and get them to use young gen for the working memory. This helps get stable
