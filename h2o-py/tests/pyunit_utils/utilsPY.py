@@ -1157,22 +1157,24 @@ def generate_response_glm(weight, x_mat, noise_std, family_type, class_method='p
             for indP in range(num_sample):
                 tresp.append(-response_y[indP,0])
             tresp.sort()
-            num_per_class = int(len(tresp)/lastClass)
+            num_per_class = int(len(tresp)/num_class)
             # do not generate evenly distributed class
-            splitInd = []
-            lowV = 0.1
-            highV = 1
-            v1 = 0
-            acc = 0
+            # splitInd = []
+            # lowV = 0.1
+            # highV = 1
+            # v1 = 0
+            # acc = 0
+            # for indC in range(lastClass):
+            #     tempf = random.uniform(lowV, highV)
+            #     splitInd.append(v1+int(tempf*num_per_class))
+            #     v1 = splitInd[indC] # from last class
+            #     acc += 1-tempf
+            #     highV = 1+acc
+            #
+            # for indC in range(lastClass):   # put in threshold
+            #     weight[0,indC] = tresp[splitInd[indC]]
             for indC in range(lastClass):
-                tempf = random.uniform(lowV, highV)
-                splitInd.append(v1+int(tempf*num_per_class))
-                v1 = splitInd[indC] # from last class
-                acc += 1-tempf
-                highV = 1+acc
-
-            for indC in range(lastClass):   # put in threshold
-                weight[0,indC] = tresp[splitInd[indC]]
+                weight[0,indC] = tresp[(indC+1)*num_per_class]
             response_y = x_mat * weight + noise_std * np.random.standard_normal([num_row, 1])
 
         discrete_y = np.zeros((num_sample, 1), dtype=np.int)

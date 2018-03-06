@@ -433,7 +433,7 @@ public class GLMBasicTestRegression extends TestUtil {
       parms._max_iterations = 1000;
       for (Solver s : GLMParameters.Solver.values()) {
         if(s == Solver.COORDINATE_DESCENT_NAIVE || s.equals(Solver.GRADIENT_DESCENT_LH)
-        || s.equals(Solver.GRADIENT_DESCENT_SQERR))) continue; // skip for now, does not handle zero columns (introduced by extra missing bucket with no missing in the dataset)
+        || s.equals(Solver.GRADIENT_DESCENT_SQERR)) continue; // skip for now, does not handle zero columns (introduced by extra missing bucket with no missing in the dataset)
         try {
           parms._solver = s;
           model = new GLM(parms).trainModel().get();

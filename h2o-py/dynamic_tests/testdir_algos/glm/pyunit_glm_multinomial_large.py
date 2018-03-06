@@ -97,7 +97,7 @@ class TestGLMMultinomial:
     test_class_margin = 0.2         # for test data set
     family = 'ordinal'         # this test is for Multinomial GLM
     curr_time = str(round(time.time()))
-    curr_time = 'ordinal_8'
+    curr_time = 'ordinal_20'
 
     # parameters denoting filenames of interested that store training/validation/test data sets
     training_filename = family+"_"+curr_time+"_training_set.csv"
@@ -253,8 +253,9 @@ class TestGLMMultinomial:
         self.class_number = random.randint(3, self.max_class_number)    # randomly set number of classes K
 
         # DEBUGGING setup_data, remember to comment them out once done.
-        self.train_col_count = 8
-        self.train_row_count = 100000
+        self.train_col_count = 20
+        self.train_row_count = 200000
+        self.noise_std = 0.0
         # self.class_number = 3
         # # end DEBUGGING
 
