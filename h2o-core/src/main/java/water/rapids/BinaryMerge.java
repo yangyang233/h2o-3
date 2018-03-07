@@ -9,7 +9,6 @@ import water.util.ArrayUtils;
 import water.util.Log;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import static water.rapids.SingleThreadRadixOrder.getSortedOXHeaderKey;
@@ -507,9 +506,9 @@ class BinaryMerge extends DTask<BinaryMerge> {
     for( int col=0; col<numColsInResult; col++ )
       for( int b = 0; b < nbatch; b++ ) {
         frameLikeChunks[col][b] = MemoryManager.malloc8d(_chunkSizes[b] = (b==nbatch-1 ? lastSize : batchSizeUUID));
+        Arrays.fill(frameLikeChunks[col][b], Double.NaN);
         // NA by default to save filling with NA for nomatches when allLeft
         frameLikeChunks4Strings[col][b] = new String[_chunkSizes[b] = (b==nbatch-1 ? lastSize : batchSizeUUID)];
-        Arrays.fill(frameLikeChunks[col][b], Double.NaN);
       }
     _timings[4] += ((t1=System.nanoTime()) - t0) / 1e9; t0=t1;
 
@@ -727,9 +726,10 @@ class BinaryMerge extends DTask<BinaryMerge> {
     Futures fs = new Futures();
     for (int col=0; col<numColsInResult; col++) {
       for (int b = 0; b < nbatch; b++) {
-        if (frameLikeChunks4String[col][b] != null) {
+        if (frameLikeChunks4String[col][b][0] != null) {
           NewChunk nc = new NewChunk(null, 0);
-          for (String s : frameLikeChunks4String[col][b]) nc.addStr(s);
+          for (int index=0; index<frameLikeChunks4String[col][b].length; index++)
+            nc.addStr(frameLikeChunks4String[col][b][index]);
           CStrChunk ck = (CStrChunk) nc.compress();
           DKV.put(getKeyForMSBComboPerCol(_leftSB._msb, _riteSB._msb, col, b), ck, fs, true);
           frameLikeChunks4String[col][b] = null; //free mem as early as possible (it's now in the store)
@@ -759,15 +759,9 @@ class BinaryMerge extends DTask<BinaryMerge> {
     double[/*col*/][] _chk; //null on the way to remote node, non-null on the way back
     String[][] _chkString;
     double timeTaken;
-    ArrayList<Integer> _stringColIndex = new ArrayList<Integer>();  // store column indices of String arrays
     GetRawRemoteRows(Frame fr, long[] rows) {
       _rows = rows;
       _fr = fr;
-      for (int colInd = 0; colInd < _fr.numCols(); colInd++) {
-        if (_fr.vec(colInd).isString()) {
-          _stringColIndex.add(colInd);
-        }
-      }
     }
 
     @Override
@@ -777,8 +771,7 @@ class BinaryMerge extends DTask<BinaryMerge> {
       long t0 = System.nanoTime();
       // System.out.print("Allocating _chk with " + _fr.numCols() +" by " + _rows.length + "...");
       _chk  = MemoryManager.malloc8d(_fr.numCols(),_rows.length);  // TODO: should this be transposed in memory?
-      if (_stringColIndex.size() > 0)
-        _chkString = new String[_fr.numCols()][_rows.length];
+      _chkString = new String[_fr.numCols()][_rows.length];
       // System.out.println("done");
       int cidx[] = MemoryManager.malloc4(_rows.length);
       int offset[] = MemoryManager.malloc4(_rows.length);
