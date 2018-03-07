@@ -82,8 +82,7 @@ public class GLMScore extends MRTask<GLMScore> {
       double previousCDF = 0.0;
       for (int cInd = 0; cInd < lastClass; cInd++) { // classify row and calculate PDF of each class
         double eta = r.innerProduct(bm[cInd])+o;
-        double tempExpEta = Math.exp(eta);
-        double currCDF = tempExpEta/(1+tempExpEta);
+        double currCDF = 1.0/(1+ Math.exp(-eta));
         preds[cInd+1] = currCDF-previousCDF;
         previousCDF = currCDF;
         if (eta >= 0) { // found the correct class
@@ -92,8 +91,7 @@ public class GLMScore extends MRTask<GLMScore> {
         }
       }
       for (int cInd = (int)preds[0]+1;cInd < lastClass; cInd++) {  // continue PDF calculation
-        double tempExpEta = Math.exp(r.innerProduct(bm[cInd])+o);
-        double currCDF = tempExpEta/(1+tempExpEta);
+        double currCDF = 1.0/(1+Math.exp(-r.innerProduct(bm[cInd])+o));
         if (currCDF > previousCDF) {
           preds[cInd + 1] = currCDF - previousCDF;
           previousCDF = currCDF;

@@ -1156,8 +1156,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         double previousCDF = 0.0;
         for (int cInd = 0; cInd < lastClass; cInd++) { // classify row and calculate PDF of each class
           double currEta = eta[cInd];
-          double tempExpEta = Math.exp(currEta);
-          double currCDF = tempExpEta/(1+tempExpEta);
+          double currCDF = 1.0/(1+Math.exp(-currEta));
           preds[cInd+1] = currCDF-previousCDF;
           previousCDF = currCDF;
           if (currEta >= 0) { // found the correct class
@@ -1166,8 +1165,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
           }
         }
         for (int cInd = (int)preds[0]+1;cInd < lastClass; cInd++) {  // continue PDF calculation
-          double tempExpEta = Math.exp(eta[cInd]);
-          double currCDF = tempExpEta/(1+tempExpEta);
+          double currCDF = 1.0/(1+Math.exp(-eta[cInd]));
           if (currCDF > previousCDF) {
             preds[cInd + 1] = currCDF - previousCDF;
             previousCDF = currCDF;
@@ -1283,7 +1281,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
       }
       final int noff = dinfo().numStart();
       body.ip("  for(int i = 0; i < " + dinfo()._nums + "; ++i)").nl();
-      body.ip("    preds[c+1] += b[" + noff + "+i + c*" + P + "]*data[i];").nl();
+      body.ip("    preds[c+1] += b[" + noff + "+i + c*" + P + "]*data[i+"+dinfo()._cats+"];").nl();
       body.ip("  preds[c+1] += b[" + (P-1) +" + c*" + P + "]; // reduce intercept").nl();
       body.ip("}").nl();
       if (_parms._family == Family.multinomial) {
@@ -1301,8 +1299,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         body.ip("double previousCDF = 0.0;").nl();
         body.ip("for (int cInd = 0; cInd < lastClass; cInd++) { // classify row and calculate PDF of each class").nl();
         body.ip(" double eta = preds[cInd+1];").nl();
-        body.ip(" double tempExpEta = Math.exp(eta);").nl();
-        body.ip(" double currCDF = tempExpEta/(1+tempExpEta);").nl();
+        body.ip(" double currCDF = 1.0/(1+Math.exp(-eta));").nl();
         body.ip(" preds[cInd+1] = currCDF-previousCDF;").nl();
         body.ip(" previousCDF = currCDF;").nl();
         body.ip("  if (eta >= 0) { // found the correct class").nl();
@@ -1311,8 +1308,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         body.ip(" }").nl();
         body.ip("}").nl();
         body.ip("for (int cInd = (int)preds[0]+1;cInd < lastClass; cInd++) {  // continue PDF calculation").nl();
-        body.ip(" double tempExpEta = Math.exp(preds[cInd+1]);").nl();
-        body.ip(" double currCDF = tempExpEta/(1+tempExpEta);").nl();
+        body.ip(" double currCDF = 1.0/(1+Math.exp(-preds[cInd+1]));").nl();
         body.ip(" if (currCDF > previousCDF) {").nl();
         body.ip("   preds[cInd + 1] = currCDF - previousCDF;").nl();
         body.ip("   previousCDF = currCDF;").nl();

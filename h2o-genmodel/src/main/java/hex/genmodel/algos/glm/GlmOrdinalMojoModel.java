@@ -51,16 +51,17 @@ public class GlmOrdinalMojoModel extends GlmMojoModelBase {
           }
         }
       }
-      for (int i = 0; i < _nums; ++i)
-        preds[c+1] += _beta[noff+i + c*P]*data[i];
+
+      for (int i = 0; i < _nums; ++i) {
+        preds[c + 1] += _beta[i+noff + c * P] * data[i+_cats];
+      }
       preds[c+1] += _beta[icptIndices[c]];
     }
 
     double previousCDF = 0.0;
     for (int cInd = 0; cInd < lastClass; cInd++) { // classify row and calculate PDF of each class
       double eta = preds[cInd+1];
-      double tempExpEta = Math.exp(eta);
-      double currCDF = tempExpEta/(1+tempExpEta);
+      double currCDF = 1.0/(1+Math.exp(-eta));
       preds[cInd+1] = currCDF-previousCDF;
       previousCDF = currCDF;
       if (eta >= 0) { // found the correct class
@@ -69,8 +70,7 @@ public class GlmOrdinalMojoModel extends GlmMojoModelBase {
       }
     }
     for (int cInd = (int)preds[0]+1;cInd < lastClass; cInd++) {  // continue PDF calculation
-      double tempExpEta = Math.exp(preds[cInd+1]);
-      double currCDF = tempExpEta/(1+tempExpEta);
+      double currCDF = 1.0/(1+Math.exp(-preds[cInd+1]));
       if (currCDF > previousCDF) {
         preds[cInd + 1] = currCDF - previousCDF;
         previousCDF = currCDF;

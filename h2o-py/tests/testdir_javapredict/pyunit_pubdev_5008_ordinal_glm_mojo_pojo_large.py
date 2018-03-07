@@ -90,8 +90,6 @@ def random_dataset(response_type, verbose=True):
     fractions["string_fraction"] = 0  # Right now we are dropping string columns, so no point in having them.
     fractions["binary_fraction"] /= 3
     fractions["time_fraction"] /= 2
-
-
     sum_fractions = sum(fractions.values())
     for k in fractions:
         fractions[k] /= sum_fractions
