@@ -62,8 +62,14 @@ public class GlmOrdinalMojoModel extends GlmMojoModelBase {
     for (int cInd = 0; cInd < lastClass; cInd++) { // classify row and calculate PDF of each class
       double eta = preds[cInd+1];
       double currCDF = 1.0/(1+Math.exp(-eta));
-      preds[cInd+1] = currCDF-previousCDF;
-      previousCDF = currCDF;
+
+      if (currCDF >= previousCDF) {
+        preds[cInd + 1] = currCDF - previousCDF;
+        previousCDF = currCDF;
+      } else {
+        preds[cInd+1] = 0;
+        previousCDF = 1;
+      }
       if (eta >= 0) { // found the correct class
         preds[0] = cInd;
         break;
@@ -71,12 +77,12 @@ public class GlmOrdinalMojoModel extends GlmMojoModelBase {
     }
     for (int cInd = (int)preds[0]+1;cInd < lastClass; cInd++) {  // continue PDF calculation
       double currCDF = 1.0/(1+Math.exp(-preds[cInd+1]));
-      if (currCDF > previousCDF) {
+      if (currCDF >= previousCDF) {
         preds[cInd + 1] = currCDF - previousCDF;
         previousCDF = currCDF;
       } else {
-        previousCDF = 1-1e-10;
-        break;
+        preds[cInd+1] = 0;
+        previousCDF = 1;
       }
     }
     preds[_nclasses] = 1-previousCDF;

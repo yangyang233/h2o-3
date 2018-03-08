@@ -1157,8 +1157,13 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         for (int cInd = 0; cInd < lastClass; cInd++) { // classify row and calculate PDF of each class
           double currEta = eta[cInd];
           double currCDF = 1.0/(1+Math.exp(-currEta));
-          preds[cInd+1] = currCDF-previousCDF;
-          previousCDF = currCDF;
+          if (currCDF >= previousCDF) {
+            preds[cInd + 1] = currCDF - previousCDF;
+            previousCDF = currCDF;
+          } else {
+            preds[cInd + 1] = 0;
+            previousCDF = 1;
+          }
           if (currEta >= 0) { // found the correct class
             preds[0] = cInd;
             break;
@@ -1166,11 +1171,12 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         }
         for (int cInd = (int)preds[0]+1;cInd < lastClass; cInd++) {  // continue PDF calculation
           double currCDF = 1.0/(1+Math.exp(-eta[cInd]));
-          if (currCDF > previousCDF) {
+          if (currCDF >= previousCDF) {
             preds[cInd + 1] = currCDF - previousCDF;
             previousCDF = currCDF;
           } else {
-            previousCDF = 1-1e-10;
+            preds[cInd+1] = 0;
+            previousCDF = 1;
             break;
           }
         }
@@ -1298,23 +1304,28 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         body.ip("preds[0]=lastClass;").nl();
         body.ip("double previousCDF = 0.0;").nl();
         body.ip("for (int cInd = 0; cInd < lastClass; cInd++) { // classify row and calculate PDF of each class").nl();
-        body.ip(" double eta = preds[cInd+1];").nl();
-        body.ip(" double currCDF = 1.0/(1+Math.exp(-eta));").nl();
-        body.ip(" preds[cInd+1] = currCDF-previousCDF;").nl();
-        body.ip(" previousCDF = currCDF;").nl();
-        body.ip("  if (eta >= 0) { // found the correct class").nl();
-        body.ip("   preds[0] = cInd;").nl();
-        body.ip("   break;").nl();
-        body.ip(" }").nl();
+        body.ip("  double eta = preds[cInd+1];").nl();
+        body.ip("  double currCDF = 1.0/(1+Math.exp(-eta));").nl();
+        body.ip("  if (currCDF >= previousCDF) {").nl();
+        body.ip("    preds[cInd+1] = currCDF-previousCDF;").nl();
+        body.ip("    previousCDF = currCDF;").nl();
+        body.ip("  } else {").nl();
+        body.ip("    preds[cInd+1] = 0;").nl();
+        body.ip("    previousCDF = 1;").nl();
+        body.ip("    if (eta >= 0) { // found the correct class").nl();
+        body.ip("      preds[0] = cInd;").nl();
+        body.ip("      break;").nl();
+        body.ip("    }").nl();
+        body.ip("  }").nl();
         body.ip("}").nl();
         body.ip("for (int cInd = (int)preds[0]+1;cInd < lastClass; cInd++) {  // continue PDF calculation").nl();
         body.ip(" double currCDF = 1.0/(1+Math.exp(-preds[cInd+1]));").nl();
-        body.ip(" if (currCDF > previousCDF) {").nl();
+        body.ip(" if (currCDF >= previousCDF) {").nl();
         body.ip("   preds[cInd + 1] = currCDF - previousCDF;").nl();
         body.ip("   previousCDF = currCDF;").nl();
         body.ip(" } else {").nl();
-        body.ip("   previousCDF = 1-1e-10;").nl();
-        body.ip("   break;").nl();
+        body.ip("  preds[cInd+1] = 0;").nl();
+        body.ip("  previousCDF = 1;").nl();
         body.ip(" }").nl();
         body.ip("}").nl();
         body.ip("preds[nclasses()] = 1-previousCDF;").nl();
