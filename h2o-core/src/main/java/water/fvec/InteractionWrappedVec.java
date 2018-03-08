@@ -142,12 +142,12 @@ public class InteractionWrappedVec extends WrappedVec {
   }
 
   @Override public double mean() {
-    if( null==t && null==v1Domain() && null==v2Domain() )
+    if( null==t && (null==v1Domain() || null==v2Domain()) )
       return super.mean();
     return 0;
   }
   @Override public double sigma() {
-    if( null==t && null==v1Domain() && null==v2Domain() )
+    if( null==t && (null==v1Domain() || null==v2Domain()) )
       return super.sigma();
     return 1;
   }

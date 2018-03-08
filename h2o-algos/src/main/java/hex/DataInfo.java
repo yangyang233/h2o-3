@@ -599,8 +599,16 @@ public class DataInfo extends Keyed<DataInfo> {
           normSub[idx] = v.mean();
           break;
         case DEMEAN:
-          normMul[idx] = 1;
-          normSub[idx] = v.mean();
+          if (isIWV) {
+            InteractionWrappedVec iwv = (InteractionWrappedVec)v;
+            for(int offset=0;offset<iwv.expandedLength();++offset) {
+              normSub[idx+offset] = iwv.getMeans()[offset];
+              normMul[idx+offset] = 1;
+            }
+          } else {
+            normSub[idx] = v.mean();
+            normMul[idx] = 1;
+          }
           break;
         case DESCALE:
           if( isIWV ) throw H2O.unimpl();
@@ -718,7 +726,7 @@ public class DataInfo extends Keyed<DataInfo> {
         InteractionWrappedVec v;
         if( i+_cats >= n || k >=n ) break;
         if (vecs[i+_cats] instanceof InteractionWrappedVec && ((v = (InteractionWrappedVec) vecs[i+_cats]).domain() != null)) { // in this case, get the categoricalOffset
-          for (int j = _useAllFactorLevels?0:1; j < v.domain().length; ++j) {
+          for (int j = 0; j < v.domain().length - (_useAllFactorLevels?0:1); ++j) {
             if (getCategoricalIdFromInteraction(_cats+i, j) < 0)
               continue;
             res[k++] = _adaptedFrame._names[i+_cats] + "." + v.domain()[j];
